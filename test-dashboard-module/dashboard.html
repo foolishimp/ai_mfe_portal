@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Section */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Controls Bar */
+        .controls-bar {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .controls-left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Directory Selection Bar */
+        .directory-bar {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .directory-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .selected-directories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .no-directories {
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            font-size: 0.85em;
+        }
+
+        .directory-tag {
+            background: rgba(102, 126, 234, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(102, 126, 234, 0.4);
+        }
+
+        .directory-tag .remove-dir {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: bold;
+            font-size: 0.9em;
+            padding: 0 2px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .directory-tag .remove-dir:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .directory-path {
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85em;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: white;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-box {
+            margin-left: auto;
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 6px 10px 6px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 15px;
+            width: 250px;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: #0f0f1e;
+        }
+
+        /* Sidebar with Tests */
+        .sidebar {
+            width: 40%;
+            min-width: 350px;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .quick-btn {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Test List Container */
+        .test-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .test-category {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-header:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b399f 100%);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-count {
+            background: rgba(255,255,255,0.2);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.75em;
+        }
+
+        .category-path {
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-top: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .category-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-controls input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .select-all-label {
+            color: white;
+            font-size: 0.8em;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .test-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .test-list.expanded {
+            max-height: 1000px;
+        }
+
+        .test-item {
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            padding-left: 20px;
+        }
+
+        .test-item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .test-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .test-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85em;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .test-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .test-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .type-playwright { background: #e3f2fd; color: #1976d2; }
+        .type-html { background: #fff3e0; color: #f57c00; }
+        .type-vitest { background: #f3e5f5; color: #7b1fa2; }
+        .type-nodejs { background: #e8f5e9; color: #388e3c; }
+        .type-python { background: #fff9c4; color: #f9a825; }
+
+        .test-path {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7em;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Output Panel */
+        .output-panel {
+            flex: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .output-header {
+            padding: 15px 20px;
+            background: #2d2d30;
+            border-bottom: 1px solid #464647;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .output-title {
+            color: #cccccc;
+            font-size: 0.95em;
+        }
+
+        .clear-output {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            background: #3c3c3c;
+            color: #cccccc;
+            border: 1px solid #464647;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-output:hover {
+            background: #484848;
+        }
+
+        .output-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 20px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .output-line {
+            padding: 2px 0;
+            border-left: 3px solid transparent;
+            padding-left: 10px;
+            margin-bottom: 1px;
+            word-wrap: break-word;
+        }
+
+        .output-line.info {
+            border-left-color: #2196f3;
+            color: #90caf9;
+        }
+
+        .output-line.success {
+            border-left-color: #4caf50;
+            color: #81c784;
+        }
+
+        .output-line.error {
+            border-left-color: #f44336;
+            color: #ef5350;
+        }
+
+        .output-line.warning {
+            border-left-color: #ff9800;
+            color: #ffb74d;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1em;
+        }
+
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #ef5350;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ef5350;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .file-content-viewer {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #d4d4d4;
+            overflow-x: auto;
+        }
+
+        .file-content-code {
+            white-space: pre;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .test-list-container::-webkit-scrollbar,
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .test-list-container::-webkit-scrollbar-track,
+        .output-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .test-list-container::-webkit-scrollbar-thumb,
+        .output-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .test-list-container::-webkit-scrollbar-thumb:hover,
+        .output-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(103, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Expand/Collapse Icon */
+        .expand-icon {
+            transition: transform 0.3s;
+            margin-right: 5px;
+        }
+
+        .category-header.collapsed .expand-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-top">
+            <div>
+                <h1>📊 Test Dashboard</h1>
+                <div class="subtitle">Project Test Suite Management</div>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Total Tests</div>
+                    <div class="stat-value" id="total-tests">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Selected</div>
+                    <div class="stat-value" id="selected-tests" style="color: #4caf50;">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value" id="total-categories">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Types</div>
+                    <div class="stat-value" id="test-types">0</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="controls-left">
+            <button class="btn btn-success" onclick="runSelectedTests()" id="run-btn" disabled>
+                ▶️ Run Selected Tests
+            </button>
+            <button class="btn btn-secondary" onclick="stopTests()" id="stop-btn" disabled>
+                ⏹️ Stop
+            </button>
+        </div>
+        <div class="controls-right">
+            <button class="btn btn-primary" onclick="refreshRegistry()">
+                🔄 Refresh Registry
+            </button>
+            <button class="btn btn-secondary" onclick="discoverTests()">
+                🔍 Re-discover Tests
+            </button>
+        </div>
+    </div>
+
+    <!-- Directory Selection Bar -->
+    <div class="directory-bar">
+        <div class="directory-controls">
+            <span class="filter-label">📁 Project Directories:</span>
+            <button class="btn btn-secondary" onclick="addDirectory()">
+                ➕ Add Directory
+            </button>
+            <button class="btn btn-secondary" onclick="clearDirectories()">
+                🗑️ Clear All
+            </button>
+        </div>
+        <div class="selected-directories" id="selected-directories">
+            <div class="no-directories">No directories selected - scanning current directory</div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="playwright">Playwright</button>
+        <button class="filter-btn" data-filter="html">HTML</button>
+        <button class="filter-btn" data-filter="vitest">Vitest</button>
+        <button class="filter-btn" data-filter="nodejs">Node.js</button>
+        <button class="filter-btn" data-filter="python">Python</button>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search" placeholder="Search tests...">
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <!-- Sidebar with Tests -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>Test Categories</span>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="selectAll()">Select All</button>
+                    <button class="quick-btn" onclick="deselectAll()">Clear</button>
+                    <button class="quick-btn" onclick="expandAll()">Expand All</button>
+                    <button class="quick-btn" onclick="collapseAll()">Collapse All</button>
+                </div>
+            </div>
+            <div class="test-list-container" id="test-list-container">
+                <div class="loading" id="loading">Loading tests...</div>
+                <div class="error" id="error" style="display: none;"></div>
+                <div id="test-categories"></div>
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-state-icon">🔍</div>
+                    <div>No tests found</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="output-panel">
+            <div class="output-header">
+                <span class="output-title">📋 Test Output</span>
+                <button class="clear-output" onclick="clearOutput()">Clear</button>
+            </div>
+            <div class="output-content" id="output-content">
+                <div class="output-line info">Ready to run tests...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Details Modal -->
+    <div id="test-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Test Details</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="run-single-test-btn">Run This Test</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testRegistry = {};
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let selectedTests = new Set();
+        let isRunning = false;
+        let expandedCategories = new Set();
+        let selectedDirectories = new Set();
+
+        async function loadTests() {
+            try {
+                const response = await fetch('/api/test-registry');
+                if (!response.ok) throw new Error('Failed to load test registry');
+                
+                testRegistry = await response.json();
+                renderDashboard();
+                
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading tests:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function getTestType(test) {
+            const ext = test.file.split('.').pop();
+            const name = test.file.toLowerCase();
+            
+            if (ext === 'cjs' || name.includes('playwright')) return 'playwright';
+            if (ext === 'html') return 'html';
+            if (name.includes('.test.') || name.includes('.spec.')) return 'vitest';
+            if (ext === 'py') return 'python';
+            return 'nodejs';
+        }
+
+        function renderDashboard() {
+            const container = document.getElementById('test-categories');
+            container.innerHTML = '';
+            
+            let totalTests = 0;
+            let categories = 0;
+            const testTypes = new Set();
+            
+            Object.entries(testRegistry).forEach(([category, tests]) => {
+                const filteredTests = tests.filter(test => {
+                    const type = getTestType(test);
+                    testTypes.add(type);
+                    
+                    const matchesFilter = currentFilter === 'all' || type === currentFilter;
+                    const matchesSearch = !currentSearch || 
+                        test.file.toLowerCase().includes(currentSearch.toLowerCase()) ||
+                        category.toLowerCase().includes(currentSearch.toLowerCase());
+                    
+                    return matchesFilter && matchesSearch;
+                });
+                
+                if (filteredTests.length === 0) return;
+                
+                categories++;
+                totalTests += filteredTests.length;
+                
+                const categoryEl = document.createElement('div');
+                categoryEl.className = 'test-category';
+                
+                const isExpanded = expandedCategories.has(category);
+                
+                categoryEl.innerHTML = `
+                    <div class="category-header ${!isExpanded ? 'collapsed' : ''}" onclick="toggleCategory('${category}')" id="header-${category}">
+                        <div class="category-info">
+                            <div class="category-title">
+                                <span class="expand-icon">▼</span>
+                                📁 ${category}
+                                <span class="category-count">${filteredTests.length}</span>
+                            </div>
+                            ${tests[0]?.directory ? `<div class="category-path">${tests[0].directory}</div>` : ''}
+                        </div>
+                        <div class="category-controls" onclick="event.stopPropagation();">
+                            <input type="checkbox" 
+                                   id="${category}-select-all" 
+                                   onchange="toggleCategorySelection('${category}')"
+                                   onclick="event.stopPropagation();">
+                            <label for="${category}-select-all" class="select-all-label" onclick="event.stopPropagation();">
+                                Select All
+                            </label>
+                        </div>
+                    </div>
+                    <div class="test-list ${isExpanded ? 'expanded' : ''}" id="category-${category}">
+                        ${filteredTests.map(test => `
+                            <div class="test-item">
+                                <input type="checkbox" 
+                                       id="test-${category}-${test.file}" 
+                                       onchange="toggleTest('${category}', '${test.file}')"
+                                       onclick="event.stopPropagation();"
+                                       ${selectedTests.has(`${category}:${test.file}`) ? 'checked' : ''}>
+                                <div class="test-info" onclick="showTestDetails('${category}', '${test.file}')">
+                                    <div class="test-name" title="${test.file}">${test.file}</div>
+                                    <div class="test-meta">
+                                        <span class="test-type type-${getTestType(test)}">${getTestType(test).toUpperCase()}</span>
+                                        <span class="test-path" title="${test.relativePath || test.file}">${test.relativePath || test.file}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(categoryEl);
+            });
+            
+            // Update stats
+            document.getElementById('total-tests').textContent = totalTests;
+            document.getElementById('total-categories').textContent = categories;
+            document.getElementById('test-types').textContent = testTypes.size;
+            updateSelectedCount();
+            
+            // Show/hide empty state
+            document.getElementById('empty-state').style.display = 
+                totalTests === 0 ? 'block' : 'none';
+        }
+
+        function toggleCategory(category) {
+            const header = document.getElementById(`header-${category}`);
+            const list = document.getElementById(`category-${category}`);
+            
+            if (expandedCategories.has(category)) {
+                expandedCategories.delete(category);
+                header.classList.add('collapsed');
+                list.classList.remove('expanded');
+            } else {
+                expandedCategories.add(category);
+                header.classList.remove('collapsed');
+                list.classList.add('expanded');
+            }
+        }
+
+        function expandAll() {
+            Object.keys(testRegistry).forEach(category => {
+                expandedCategories.add(category);
+            });
+            renderDashboard();
+        }
+
+        function collapseAll() {
+            expandedCategories.clear();
+            renderDashboard();
+        }
+
+        function toggleTest(category, testFile) {
+            const key = `${category}:${testFile}`;
+            if (selectedTests.has(key)) {
+                selectedTests.delete(key);
+            } else {
+                selectedTests.add(key);
+            }
+            updateSelectedCount();
+            updateCategoryCheckbox(category);
+        }
+
+        function toggleCategorySelection(category) {
+            const checkbox = document.getElementById(`${category}-select-all`);
+            const tests = testRegistry[category] || [];
+            
+            if (checkbox.checked) {
+                tests.forEach(test => {
+                    selectedTests.add(`${category}:${test.file}`);
+                    const testCheckbox = document.getElementById(`test-${category}-${test.file}`);
+                    if (testCheckbox) testCheckbox.checked = true;
+                });
+            } else {
+                tests.forEach(test => {
+                    selectedTests.delete(`${category}:${test.file}`);
+                    const testCheckbox = document.getElementById(`test-${category}-${test.file}`);
+                    if (testCheckbox) testCheckbox.checked = false;
+                });
+            }
+            updateSelectedCount();
+        }
+
+        function updateCategoryCheckbox(category) {
+            const tests = testRegistry[category] || [];
+            const selectedCount = tests.filter(test => 
+                selectedTests.has(`${category}:${test.file}`)
+            ).length;
+            
+            const checkbox = document.getElementById(`${category}-select-all`);
+            if (checkbox) {
+                checkbox.checked = selectedCount === tests.length && tests.length > 0;
+                checkbox.indeterminate = selectedCount > 0 && selectedCount < tests.length;
+            }
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selected-tests').textContent = selectedTests.size;
+            document.getElementById('run-btn').disabled = selectedTests.size === 0 || isRunning;
+        }
+
+        function selectAll() {
+            Object.entries(testRegistry).forEach(([category, tests]) => {
+                tests.forEach(test => {
+                    const key = `${category}:${test.file}`;
+                    selectedTests.add(key);
+                    const checkbox = document.getElementById(`test-${category}-${test.file}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                const categoryCheckbox = document.getElementById(`${category}-select-all`);
+                if (categoryCheckbox) categoryCheckbox.checked = true;
+            });
+            updateSelectedCount();
+        }
+
+        function deselectAll() {
+            selectedTests.clear();
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.indeterminate = false;
+            });
+            updateSelectedCount();
+        }
+
+        async function refreshRegistry() {
+            log('Refreshing test registry...', 'info');
+            await loadTests();
+            log('Test registry refreshed', 'success');
+        }
+
+        async function discoverTests() {
+            return discoverTestsWithDirectories();
+        }
+
+        async function runSelectedTests() {
+            if (selectedTests.size === 0) {
+                log('No tests selected', 'warning');
+                return;
+            }
+            
+            isRunning = true;
+            document.getElementById('run-btn').disabled = true;
+            document.getElementById('stop-btn').disabled = false;
+            log(`Running ${selectedTests.size} selected tests...`, 'info');
+            
+            let passed = 0;
+            let failed = 0;
+            
+            for (const testKey of selectedTests) {
+                if (!isRunning) {
+                    log('Test run stopped by user', 'warning');
+                    break;
+                }
+                
+                const [category, testFile] = testKey.split(':');
+                const test = testRegistry[category]?.find(t => t.file === testFile);
+                if (!test) continue;
+                
+                log(`Running: ${test.file}`, 'info');
+                
+                try {
+                    const response = await fetch('/api/run-test', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: test.relativePath || test.file })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success || response.ok) {
+                        passed++;
+                        log(`✓ ${test.file} passed`, 'success');
+                        if (result.output) {
+                            log(result.output.substring(0, 200), 'info');
+                        }
+                    } else {
+                        failed++;
+                        log(`✗ ${test.file} failed`, 'error');
+                        if (result.error || result.output) {
+                            log(result.error || result.output, 'error');
+                        }
+                    }
+                } catch (error) {
+                    failed++;
+                    log(`✗ ${test.file}: ${error.message}`, 'error');
+                }
+            }
+            
+            log(`Test run complete: ${passed} passed, ${failed} failed`, 
+                failed === 0 ? 'success' : 'warning');
+            
+            isRunning = false;
+            document.getElementById('run-btn').disabled = selectedTests.size === 0;
+            document.getElementById('stop-btn').disabled = true;
+        }
+
+        function stopTests() {
+            isRunning = false;
+            document.getElementById('stop-btn').disabled = true;
+            log('Stopping test run...', 'warning');
+        }
+
+        function log(message, type = 'info') {
+            const content = document.getElementById('output-content');
+            
+            const line = document.createElement('div');
+            line.className = `output-line ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            
+            content.appendChild(line);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output-content').innerHTML = '<div class="output-line info">Ready to run tests...</div>';
+        }
+
+        async function showTestDetails(category, testFile) {
+            const test = testRegistry[category]?.find(t => t.file === testFile);
+            if (!test) return;
+            
+            const modal = document.getElementById('test-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const runBtn = document.getElementById('run-single-test-btn');
+            
+            modalTitle.textContent = test.file;
+            modalBody.innerHTML = '<div class="loading">Loading test content...</div>';
+            modal.classList.add('active');
+            
+            try {
+                const response = await fetch(`/api/test-content?path=${encodeURIComponent(test.relativePath || test.file)}`);
+                const content = await response.text();
+                
+                modalBody.innerHTML = `
+                    <div class="file-content-viewer">
+                        <div class="file-content-code">${escapeHtml(content)}</div>
+                    </div>
+                `;
+                
+                // Setup run button
+                runBtn.onclick = () => runSingleTest(test);
+            } catch (error) {
+                modalBody.innerHTML = `<div class="error">Failed to load test content: ${error.message}</div>`;
+            }
+        }
+
+        async function runSingleTest(test) {
+            const runBtn = document.getElementById('run-single-test-btn');
+            runBtn.disabled = true;
+            runBtn.textContent = 'Running...';
+            
+            try {
+                const response = await fetch('/api/run-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: test.relativePath || test.file })
+                });
+                
+                const result = await response.json();
+                
+                // Show result in modal
+                const modalBody = document.getElementById('modal-body');
+                modalBody.innerHTML = `
+                    <h3>Test Result</h3>
+                    <div class="file-content-viewer">
+                        <div class="file-content-code">${escapeHtml(result.output || result.error || 'Test completed')}</div>
+                    </div>
+                `;
+                
+                log(`Ran ${test.file}: ${result.success ? 'passed' : 'failed'}`, 
+                    result.success ? 'success' : 'error');
+            } catch (error) {
+                alert(`Failed to run test: ${error.message}`);
+                log(`Failed to run ${test.file}: ${error.message}`, 'error');
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run This Test';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('test-modal').classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Directory Management Functions
+        function loadSelectedDirectories() {
+            const saved = localStorage.getItem('selectedDirectories');
+            if (saved) {
+                selectedDirectories = new Set(JSON.parse(saved));
+                updateDirectoryDisplay();
+            }
+        }
+
+        function saveSelectedDirectories() {
+            localStorage.setItem('selectedDirectories', JSON.stringify([...selectedDirectories]));
+        }
+
+        function addDirectory() {
+            // Use prompt for now, could be enhanced with a proper file picker
+            const directory = prompt('Enter directory path (absolute or relative):');
+            if (directory && directory.trim()) {
+                const cleanPath = directory.trim();
+                selectedDirectories.add(cleanPath);
+                saveSelectedDirectories();
+                updateDirectoryDisplay();
+                log(`Added directory: ${cleanPath}`, 'info');
+            }
+        }
+
+        function removeDirectory(directory) {
+            selectedDirectories.delete(directory);
+            saveSelectedDirectories();
+            updateDirectoryDisplay();
+            log(`Removed directory: ${directory}`, 'info');
+        }
+
+        function clearDirectories() {
+            if (selectedDirectories.size > 0 && confirm('Clear all selected directories?')) {
+                selectedDirectories.clear();
+                saveSelectedDirectories();
+                updateDirectoryDisplay();
+                log('Cleared all directories', 'info');
+            }
+        }
+
+        function updateDirectoryDisplay() {
+            const container = document.getElementById('selected-directories');
+            
+            if (selectedDirectories.size === 0) {
+                container.innerHTML = '<div class="no-directories">No directories selected - scanning current directory</div>';
+                return;
+            }
+
+            const directoryTags = [...selectedDirectories].map(dir => `
+                <div class="directory-tag">
+                    <span class="directory-path" title="${dir}">${dir}</span>
+                    <span class="remove-dir" onclick="removeDirectory('${dir}')" title="Remove directory">×</span>
+                </div>
+            `).join('');
+
+            container.innerHTML = directoryTags;
+        }
+
+        // Modified discover tests function to use selected directories
+        async function discoverTestsWithDirectories() {
+            try {
+                log('Discovering tests...', 'info');
+                const directories = [...selectedDirectories];
+                
+                const response = await fetch('/api/discover-tests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ directories })
+                });
+                
+                if (!response.ok) throw new Error('Failed to discover tests');
+                
+                await loadTests();
+                log('Test discovery completed', 'success');
+            } catch (error) {
+                console.error('Error discovering tests:', error);
+                log(`Discovery failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Setup filters
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.filter;
+                renderDashboard();
+            });
+        });
+
+        // Setup search
+        document.getElementById('search').addEventListener('input', (e) => {
+            currentSearch = e.target.value;
+            renderDashboard();
+        });
+
+        // Close modal on outside click
+        document.getElementById('test-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'test-modal') {
+                closeModal();
+            }
+        });
+
+        // Initial log message
+        log('Dashboard initialized. Ready to run tests.', 'info');
+
+        // Initialize directories and load tests on page load
+        loadSelectedDirectories();
+        loadTests();
+    </script>
+</body>
+</html>

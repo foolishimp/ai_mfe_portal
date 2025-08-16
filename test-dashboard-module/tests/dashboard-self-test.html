@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Self-Test Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .test-suite {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .suite-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .test-case {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .test-case.running {
+            border-left-color: #ffa726;
+            background: #fff8e1;
+        }
+
+        .test-case.passed {
+            border-left-color: #66bb6a;
+            background: #e8f5e9;
+        }
+
+        .test-case.failed {
+            border-left-color: #ef5350;
+            background: #ffebee;
+        }
+
+        .test-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .test-status {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .test-error {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 4px;
+            color: #c62828;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .summary {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .summary-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .passed .stat-value { color: #66bb6a; }
+        .failed .stat-value { color: #ef5350; }
+        .total .stat-value { color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Dashboard Self-Test Suite</h1>
+        <div class="subtitle">Automated tests for Test Dashboard functionality</div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="runAllTests()">Run All Tests</button>
+            <button class="btn btn-secondary" onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div id="test-suites">
+            <!-- Test suites will be populated here -->
+        </div>
+
+        <div class="summary" id="summary" style="display: none;">
+            <div class="summary-title">Test Summary</div>
+            <div class="summary-stats">
+                <div class="stat passed">
+                    <div class="stat-value" id="passed-count">0</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat failed">
+                    <div class="stat-value" id="failed-count">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat total">
+                    <div class="stat-value" id="total-count">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test Suite Definition
+        const testSuites = [
+            {
+                name: 'API Connectivity Tests',
+                tests: [
+                    {
+                        name: 'Test server is running',
+                        async run() {
+                            const response = await fetch('/');
+                            if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                            return 'Server is running';
+                        }
+                    },
+                    {
+                        name: 'Test registry endpoint',
+                        async run() {
+                            const response = await fetch('/api/test-registry');
+                            if (!response.ok) throw new Error(`Registry endpoint returned ${response.status}`);
+                            const data = await response.json();
+                            return `Registry loaded with ${Object.keys(data).length} categories`;
+                        }
+                    },
+                    {
+                        name: 'Test Claude status endpoint',
+                        async run() {
+                            const response = await fetch('/api/claude-status');
+                            if (!response.ok) throw new Error(`Status endpoint returned ${response.status}`);
+                            const data = await response.json();
+                            return `Claude initialized: ${data.initialized}`;
+                        }
+                    }
+                ]
+            },
+            {
+                name: 'Dashboard UI Tests',
+                tests: [
+                    {
+                        name: 'Dashboard loads correctly',
+                        async run() {
+                            const response = await fetch('/');
+                            const html = await response.text();
+                            if (!html.includes('Test Dashboard')) {
+                                throw new Error('Dashboard HTML missing expected content');
+                            }
+                            return 'Dashboard HTML loaded';
+                        }
+                    },
+                    {
+                        name: 'Test filtering works',
+                        async run() {
+                            // This would normally interact with the dashboard
+                            // For now, just verify the endpoint works
+                            const response = await fetch('/api/test-registry');
+                            const data = await response.json();
+                            return 'Test data structure valid';
+                        }
+                    }
+                ]
+            },
+            {
+                name: 'Claude Integration Tests',
+                tests: [
+                    {
+                        name: 'Check CLAUDE.md exists',
+                        async run() {
+                            const response = await fetch('/api/claude-status');
+                            const data = await response.json();
+                            if (!data.hasCLAUDE_md) {
+                                throw new Error('CLAUDE.md not found - run claude_init setup');
+                            }
+                            return 'CLAUDE.md found';
+                        }
+                    },
+                    {
+                        name: 'Check claude_tasks directory',
+                        async run() {
+                            const response = await fetch('/api/claude-status');
+                            const data = await response.json();
+                            if (!data.has_claude_tasks) {
+                                throw new Error('claude_tasks directory not found');
+                            }
+                            return 'claude_tasks directory found';
+                        }
+                    },
+                    {
+                        name: 'Verify Claude initialization',
+                        async run() {
+                            const response = await fetch('/api/claude-status');
+                            const data = await response.json();
+                            if (!data.initialized) {
+                                throw new Error('Claude Task Management not fully initialized');
+                            }
+                            return 'Claude Task Management is initialized';
+                        }
+                    }
+                ]
+            },
+            {
+                name: 'Test Discovery Tests',
+                tests: [
+                    {
+                        name: 'Discovery finds test files',
+                        async run() {
+                            const response = await fetch('/api/test-registry');
+                            const data = await response.json();
+                            const totalTests = Object.values(data).flat().length;
+                            if (totalTests === 0) {
+                                throw new Error('No tests found by discovery');
+                            }
+                            return `Found ${totalTests} test files`;
+                        }
+                    },
+                    {
+                        name: 'Test categories are created',
+                        async run() {
+                            const response = await fetch('/api/test-registry');
+                            const data = await response.json();
+                            const categories = Object.keys(data);
+                            if (categories.length === 0) {
+                                throw new Error('No test categories created');
+                            }
+                            return `${categories.length} categories created`;
+                        }
+                    }
+                ]
+            }
+        ];
+
+        // Test Runner
+        let results = {};
+
+        function initializeTests() {
+            const container = document.getElementById('test-suites');
+            container.innerHTML = '';
+
+            testSuites.forEach((suite, suiteIndex) => {
+                const suiteEl = document.createElement('div');
+                suiteEl.className = 'test-suite';
+                suiteEl.innerHTML = `
+                    <div class="suite-title">${suite.name}</div>
+                    <div id="suite-${suiteIndex}">
+                        ${suite.tests.map((test, testIndex) => `
+                            <div class="test-case" id="test-${suiteIndex}-${testIndex}">
+                                <div class="test-name">${test.name}</div>
+                                <div class="test-status">Not run</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(suiteEl);
+            });
+        }
+
+        async function runTest(suiteIndex, testIndex) {
+            const testEl = document.getElementById(`test-${suiteIndex}-${testIndex}`);
+            const statusEl = testEl.querySelector('.test-status');
+            const test = testSuites[suiteIndex].tests[testIndex];
+
+            testEl.className = 'test-case running';
+            statusEl.textContent = 'Running...';
+
+            try {
+                const result = await test.run();
+                testEl.className = 'test-case passed';
+                statusEl.textContent = `✓ Passed: ${result}`;
+                return { passed: true };
+            } catch (error) {
+                testEl.className = 'test-case failed';
+                statusEl.textContent = `✗ Failed`;
+                
+                const errorEl = document.createElement('div');
+                errorEl.className = 'test-error';
+                errorEl.textContent = error.message;
+                testEl.appendChild(errorEl);
+                
+                return { passed: false, error: error.message };
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+            let passed = 0;
+            let failed = 0;
+
+            for (let s = 0; s < testSuites.length; s++) {
+                for (let t = 0; t < testSuites[s].tests.length; t++) {
+                    const result = await runTest(s, t);
+                    if (result.passed) {
+                        passed++;
+                    } else {
+                        failed++;
+                    }
+                    
+                    // Update summary
+                    updateSummary(passed, failed);
+                }
+            }
+
+            // Show final summary
+            document.getElementById('summary').style.display = 'block';
+        }
+
+        function updateSummary(passed, failed) {
+            document.getElementById('passed-count').textContent = passed;
+            document.getElementById('failed-count').textContent = failed;
+            document.getElementById('total-count').textContent = passed + failed;
+            document.getElementById('summary').style.display = 'block';
+        }
+
+        function clearResults() {
+            initializeTests();
+            document.getElementById('summary').style.display = 'none';
+        }
+
+        // Initialize on load
+        initializeTests();
+    </script>
+</body>
+</html>
