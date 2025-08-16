@@ -1,0 +1,26 @@
+{
+  "name": "ai-mfe-portal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Generic microfrontend portal framework with configurable layouts and preferences",
+  "keywords": ["microfrontend", "portal", "mfe", "framework", "react", "typescript"],
+  "author": "AI MFE Portal Contributors",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build:shared": "cd packages/shared && npm run build",
+    "build:shell": "cd packages/shell && npm run build",
+    "build:test-app": "cd packages/test-app && npm run build",
+    "build:all": "npm run build:shared && npm run build:shell && npm run build:test-app",
+    "start": "cd packages/shell && npm start",
+    "start:prefs": "cd shell_service && python main.py",
+    "install:all": "npm install && npm run build:shared",
+    "clean": "rimraf packages/*/dist packages/*/node_modules node_modules",
+    "dev": "npm run build:shared && npm start"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5"
+  }
+}

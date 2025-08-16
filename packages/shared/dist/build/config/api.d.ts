@@ -1,0 +1,22 @@
+export declare const api: import("axios").AxiosInstance;
+export declare const API_ENDPOINTS: {
+    CONFIG_TYPES: string;
+    CONFIGS: (type: string) => string;
+    CONFIG: (type: string, id: string) => string;
+    CONFIG_HISTORY: (type: string, id: string) => string;
+    CONFIG_CLONE: (type: string, id: string) => string;
+    CONFIG_ARCHIVE: (type: string, id: string) => string;
+    CONFIG_UNARCHIVE: (type: string, id: string) => string;
+    JOBS: string;
+    JOB: (id: string) => string;
+    JOB_CANCEL: (id: string) => string;
+    WORKORDERS: string;
+    WORKORDER: (id: string) => string;
+    WORKORDER_HISTORY: (id: string) => string;
+    WORKORDER_CLONE: (id: string) => string;
+    WORKORDER_ARCHIVE: (id: string) => string;
+    WORKORDER_UNARCHIVE: (id: string) => string;
+    WORKORDER_RENDER: (id: string) => string;
+    WORKORDER_TEST: (id: string) => string;
+};
+export default api;

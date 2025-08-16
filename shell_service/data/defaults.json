@@ -1,0 +1,28 @@
+{
+  "default_user_frames": [
+    {
+      "id": "welcome-frame",
+      "name": "Welcome",
+      "order": 0,
+      "layoutId": "single-pane",
+      "assignedApps": [
+        {
+          "appId": "test-app",
+          "windowId": 1
+        }
+      ]
+    }
+  ],
+  "available_apps": [
+    {
+      "id": "test-app",
+      "name": "Test Application",
+      "scope": "testApp",
+      "module": "./TestApp",
+      "url": "http://localhost:3002/src/main.tsx"
+    }
+  ],
+  "service_endpoints": {
+    "jobConfigServiceUrl": "http://localhost:8000"
+  }
+}
