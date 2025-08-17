@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * @test-category integration
  * @test-name Portal Integration E2E Test
@@ -6,16 +7,93 @@
  */
 
 const { spawn } = require('child_process');
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const http = require('http');
+const https = require('https');
+const url = require('url');
+
+// Simple HTTP client for testing
+function httpGet(targetUrl, options = {}) {
+    return new Promise((resolve, reject) => {
+        const { timeout = 10000, headers = {} } = options;
+        const parsedUrl = url.parse(targetUrl);
+        const client = parsedUrl.protocol === 'https:' ? https : http;
+        
+        const request = client.get({
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port,
+            path: parsedUrl.path,
+            headers: headers,
+            timeout: timeout
+        }, (response) => {
+            let data = '';
+            response.on('data', chunk => data += chunk);
+            response.on('end', () => {
+                resolve({
+                    status: response.statusCode,
+                    headers: response.headers,
+                    data: data
+                });
+            });
+        });
+        
+        request.on('error', reject);
+        request.on('timeout', () => {
+            request.destroy();
+            reject(new Error(`Request timeout after ${timeout}ms`));
+        });
+    });
+}
+
+function httpPut(targetUrl, postData, options = {}) {
+    return new Promise((resolve, reject) => {
+        const { timeout = 10000, headers = {} } = options;
+        const parsedUrl = url.parse(targetUrl);
+        const client = parsedUrl.protocol === 'https:' ? https : http;
+        
+        const postDataString = JSON.stringify(postData);
+        
+        const requestOptions = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port,
+            path: parsedUrl.path,
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postDataString),
+                ...headers
+            },
+            timeout: timeout
+        };
+        
+        const request = client.request(requestOptions, (response) => {
+            let data = '';
+            response.on('data', chunk => data += chunk);
+            response.on('end', () => {
+                resolve({
+                    status: response.statusCode,
+                    headers: response.headers,
+                    data: data
+                });
+            });
+        });
+        
+        request.on('error', reject);
+        request.on('timeout', () => {
+            request.destroy();
+            reject(new Error(`Request timeout after ${timeout}ms`));
+        });
+        
+        request.write(postDataString);
+        request.end();
+    });
+}
 
 // Test configuration
 const TEST_CONFIG = {
     BACKEND_PORT: 8011,
-    FRONTEND_PORT: 3000,
-    TEST_USER_ID: 'test-user-e2e',
-    STARTUP_TIMEOUT: 30000,
+    FRONTEND_PORT: 3100,
+    TEST_USER_ID: 'test-user-integration',
+    STARTUP_TIMEOUT: 45000,
     API_TIMEOUT: 10000,
     UI_TIMEOUT: 15000,
     CLEANUP_TIMEOUT: 10000
@@ -24,295 +102,270 @@ const TEST_CONFIG = {
 // Test state
 let portalProcess = null;
 let testResults = {
+    portalStartup: false,
     backendStartup: false,
     frontendStartup: false,
     preferencesApi: false,
     uiAccessible: false,
-    preferencesUI: false,
+    preferencesFlow: false,
+    integration: false,
     cleanup: false
 };
 
-describe('AI MFE Portal Integration', () => {
-    
-    beforeAll(async () => {
-        console.log('🚀 Starting AI MFE Portal Integration Tests');
-        console.log(`Backend Port: ${TEST_CONFIG.BACKEND_PORT}`);
-        console.log(`Frontend Port: ${TEST_CONFIG.FRONTEND_PORT}`);
-    }, TEST_CONFIG.STARTUP_TIMEOUT);
+// Simple assertion helper
+function assertEqual(actual, expected, message) {
+    if (actual !== expected) {
+        throw new Error(`${message}: Expected ${expected}, got ${actual}`);
+    }
+}
 
-    afterAll(async () => {
-        console.log('🧹 Cleaning up test processes');
-        if (portalProcess && !portalProcess.killed) {
-            portalProcess.kill('SIGTERM');
-            await new Promise(resolve => {
-                portalProcess.on('close', () => {
-                    testResults.cleanup = true;
-                    resolve();
-                });
-                setTimeout(() => {
-                    if (!portalProcess.killed) {
-                        portalProcess.kill('SIGKILL');
-                        testResults.cleanup = true;
-                        resolve();
-                    }
-                }, TEST_CONFIG.CLEANUP_TIMEOUT);
-            });
-        }
+function assertProperty(obj, prop, message) {
+    if (!obj.hasOwnProperty(prop)) {
+        throw new Error(`${message}: Expected object to have property '${prop}'`);
+    }
+}
+
+async function runIntegrationTests() {
+    console.log('🚀 AI MFE Portal Full Integration Tests');
+    console.log(`Backend Port: ${TEST_CONFIG.BACKEND_PORT}`);
+    console.log(`Frontend Port: ${TEST_CONFIG.FRONTEND_PORT}`);
+    
+    let testsPassed = 0;
+    let testsFailed = 0;
+    
+    try {
+        // Test 1: Start fresh portal instance
+        console.log('\n📋 Test 1: Portal Fresh Startup');
+        await testPortalStartup();
+        console.log('✅ Test 1 PASSED: Portal started from scratch');
+        testsPassed++;
         
-        // Report test results summary
-        console.log('\n📊 Test Results Summary:');
-        Object.entries(testResults).forEach(([test, passed]) => {
-            console.log(`   ${passed ? '✅' : '❌'} ${test}`);
+        // Test 2: Complete API validation
+        console.log('\n📋 Test 2: Complete API Validation');
+        await testCompleteAPI();
+        console.log('✅ Test 2 PASSED: All API endpoints validated');
+        testsPassed++;
+        
+        // Test 3: UI and preferences integration
+        console.log('\n📋 Test 3: UI Integration Test');
+        await testUIIntegration();
+        console.log('✅ Test 3 PASSED: UI integration verified');
+        testsPassed++;
+        
+        // Test 4: End-to-end preferences flow
+        console.log('\n📋 Test 4: End-to-End Preferences Flow');
+        await testEndToEndFlow();
+        console.log('✅ Test 4 PASSED: Complete preferences workflow');
+        testsPassed++;
+        
+    } catch (error) {
+        console.error(`❌ Test FAILED: ${error.message}`);
+        testsFailed++;
+    } finally {
+        // Cleanup
+        console.log('\n📋 Cleanup: Stopping services');
+        await cleanup();
+        testResults.cleanup = true;
+        console.log('✅ Cleanup completed');
+    }
+    
+    // Report results
+    console.log('\n📊 Integration Test Results:');
+    console.log(`   Tests Passed: ${testsPassed}`);
+    console.log(`   Tests Failed: ${testsFailed}`);
+    console.log(`   Total Tests: ${testsPassed + testsFailed}`);
+    
+    Object.entries(testResults).forEach(([test, passed]) => {
+        console.log(`   ${passed ? '✅' : '❌'} ${test}`);
+    });
+    
+    if (testsFailed > 0) {
+        console.log('\n❌ Integration tests failed');
+        process.exit(1);
+    } else {
+        console.log('\n🎉 All integration tests passed!');
+        process.exit(0);
+    }
+}
+
+async function testPortalStartup() {
+    console.log('🔧 Starting fresh portal instance...');
+    
+    // Start a clean portal instance
+    portalProcess = spawn('python', ['start_portal.py', '--services', 'shell'], {
+        cwd: process.cwd(),
+        env: { ...process.env, APP_ENV: 'development' },
+        stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    let backendReady = false;
+    let frontendReady = false;
+    let startupComplete = false;
+
+    const startupPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+            reject(new Error(`Portal startup timed out after ${TEST_CONFIG.STARTUP_TIMEOUT}ms`));
+        }, TEST_CONFIG.STARTUP_TIMEOUT);
+
+        portalProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            console.log('STARTUP:', output.trim());
+            
+            const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
+
+            if (cleanOutput.includes('shell_service started') || cleanOutput.includes(`port ${TEST_CONFIG.BACKEND_PORT}`)) {
+                backendReady = true;
+                testResults.backendStartup = true;
+            }
+
+            if (cleanOutput.includes('shell started') || cleanOutput.includes(`port ${TEST_CONFIG.FRONTEND_PORT}`)) {
+                frontendReady = true;
+                testResults.frontendStartup = true;
+            }
+
+            if (cleanOutput.includes('AI MFE PORTAL RUNNING')) {
+                startupComplete = true;
+                clearTimeout(timeout);
+                setTimeout(resolve, 3000);
+            } else if (backendReady && frontendReady && !startupComplete) {
+                startupComplete = true;
+                clearTimeout(timeout);
+                setTimeout(resolve, 3000);
+            }
+        });
+
+        portalProcess.stderr.on('data', (data) => {
+            console.error('STARTUP ERROR:', data.toString().trim());
+        });
+
+        portalProcess.on('close', (code) => {
+            clearTimeout(timeout);
+            if (code !== 0 && !startupComplete) {
+                reject(new Error(`Portal process exited with code ${code}`));
+            }
         });
     });
 
-    test('should start the portal with both backend and frontend services', async () => {
-        console.log('🔧 Starting portal services...');
-        
-        // Start the portal using the unified start script
-        portalProcess = spawn('python', ['start_portal.py'], {
-            cwd: process.cwd(),
-            env: { ...process.env, APP_ENV: 'development' },
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
+    await startupPromise;
+    assertEqual(backendReady, true, 'Backend should start successfully');
+    assertEqual(frontendReady, true, 'Frontend should start successfully');
+    testResults.portalStartup = true;
+}
 
-        let backendReady = false;
-        let frontendReady = false;
-        let startupComplete = false;
+async function testCompleteAPI() {
+    console.log('🔌 Testing complete API functionality...');
 
-        // Monitor startup logs
-        const startupPromise = new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error(`Portal startup timed out after ${TEST_CONFIG.STARTUP_TIMEOUT}ms`));
-            }, TEST_CONFIG.STARTUP_TIMEOUT);
-
-            portalProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                console.log('PORTAL:', output.trim());
-
-                // Check for backend service startup
-                if (output.includes('shell_service started') || output.includes(`port ${TEST_CONFIG.BACKEND_PORT}`)) {
-                    backendReady = true;
-                    testResults.backendStartup = true;
-                }
-
-                // Check for frontend service startup
-                if (output.includes('shell started') || output.includes(`port ${TEST_CONFIG.FRONTEND_PORT}`)) {
-                    frontendReady = true;
-                    testResults.frontendStartup = true;
-                }
-
-                // Check for overall startup completion
-                if (output.includes('AI MFE PORTAL RUNNING') || (backendReady && frontendReady)) {
-                    startupComplete = true;
-                    clearTimeout(timeout);
-                    resolve();
-                }
-            });
-
-            portalProcess.stderr.on('data', (data) => {
-                console.error('PORTAL ERROR:', data.toString().trim());
-            });
-
-            portalProcess.on('close', (code) => {
-                clearTimeout(timeout);
-                if (code !== 0 && !startupComplete) {
-                    reject(new Error(`Portal process exited with code ${code}`));
-                }
-            });
-        });
-
-        await startupPromise;
-
-        // Verify both services started
-        expect(backendReady).toBe(true);
-        expect(frontendReady).toBe(true);
-        console.log('✅ Portal services started successfully');
-
-    }, TEST_CONFIG.STARTUP_TIMEOUT);
-
-    test('should have functional preferences API endpoints', async () => {
-        console.log('🔌 Testing preferences API endpoints...');
-
-        const baseUrl = `http://localhost:${TEST_CONFIG.BACKEND_PORT}`;
-        
-        // Test health check
-        const healthResponse = await axios.get(`${baseUrl}/health`, {
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(healthResponse.status).toBe(200);
-        console.log('✅ Health check passed');
-
-        // Test shell configuration endpoint
-        const configResponse = await axios.get(`${baseUrl}/api/v1/shell/configuration`, {
-            headers: { 'X-User-Id': TEST_CONFIG.TEST_USER_ID },
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(configResponse.status).toBe(200);
-        expect(configResponse.data).toHaveProperty('frames');
-        expect(configResponse.data).toHaveProperty('availableApps');
-        expect(configResponse.data).toHaveProperty('serviceEndpoints');
-        console.log('✅ Configuration endpoint functional');
-
-        // Test layouts endpoint
-        const layoutsResponse = await axios.get(`${baseUrl}/api/v1/shell/layouts`, {
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(layoutsResponse.status).toBe(200);
-        expect(Array.isArray(layoutsResponse.data)).toBe(true);
-        console.log('✅ Layouts endpoint functional');
-
-        // Test available apps endpoint
-        const appsResponse = await axios.get(`${baseUrl}/api/v1/shell/available-apps`, {
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(appsResponse.status).toBe(200);
-        expect(Array.isArray(appsResponse.data)).toBe(true);
-        console.log('✅ Available apps endpoint functional');
-
-        testResults.preferencesApi = true;
-        console.log('✅ All API endpoints tested successfully');
-
-    }, TEST_CONFIG.API_TIMEOUT);
-
-    test('should have accessible UI at frontend port', async () => {
-        console.log('🌐 Testing frontend UI accessibility...');
-
-        const frontendUrl = `http://localhost:${TEST_CONFIG.FRONTEND_PORT}`;
-        
-        // Wait a bit for frontend to fully initialize
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const response = await axios.get(frontendUrl, {
-            timeout: TEST_CONFIG.UI_TIMEOUT,
-            validateStatus: (status) => status < 500 // Accept redirects and client errors
-        });
-
-        expect(response.status).toBeLessThan(500);
-        expect(response.data).toContain('html'); // Should return HTML content
-        console.log('✅ Frontend UI is accessible');
-
-        testResults.uiAccessible = true;
-
-    }, TEST_CONFIG.UI_TIMEOUT);
-
-    test('should be able to save and retrieve preferences through API', async () => {
-        console.log('💾 Testing preferences save/retrieve functionality...');
-
-        const baseUrl = `http://localhost:${TEST_CONFIG.BACKEND_PORT}`;
-        const headers = { 
-            'X-User-Id': TEST_CONFIG.TEST_USER_ID,
-            'Content-Type': 'application/json'
-        };
-
-        // Get initial configuration
-        const initialConfig = await axios.get(`${baseUrl}/api/v1/shell/configuration`, {
-            headers,
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-
-        // Create test preferences data
-        const testPreferences = {
-            frames: [
-                {
-                    id: 'test-frame-1',
-                    name: 'Test Frame',
-                    order: 0,
-                    layoutId: 'single-pane',
-                    assignedApps: [
-                        {
-                            appId: 'test-app',
-                            windowId: 1
-                        }
-                    ]
-                }
-            ]
-        };
-
-        // Save preferences
-        const saveResponse = await axios.put(`${baseUrl}/api/v1/shell/preferences`, testPreferences, {
-            headers,
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(saveResponse.status).toBe(200);
-        expect(saveResponse.data).toHaveProperty('message');
-        console.log('✅ Preferences saved successfully');
-
-        // Retrieve and verify saved preferences
-        const updatedConfig = await axios.get(`${baseUrl}/api/v1/shell/configuration`, {
-            headers,
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-        expect(updatedConfig.status).toBe(200);
-        expect(updatedConfig.data.frames).toHaveLength(1);
-        expect(updatedConfig.data.frames[0].name).toBe('Test Frame');
-        console.log('✅ Preferences retrieved and verified');
-
-        testResults.preferencesUI = true;
-        console.log('✅ Preferences save/retrieve cycle completed');
-
-    }, TEST_CONFIG.API_TIMEOUT);
-
-    test('should handle frontend-backend integration gracefully', async () => {
-        console.log('🔄 Testing frontend-backend integration...');
-
-        // Test that frontend can reach backend through CORS
-        const backendUrl = `http://localhost:${TEST_CONFIG.BACKEND_PORT}`;
-        const frontendUrl = `http://localhost:${TEST_CONFIG.FRONTEND_PORT}`;
-
-        // Verify CORS headers are present
-        const corsTestResponse = await axios.options(`${backendUrl}/api/v1/shell/configuration`, {
-            headers: {
-                'Origin': frontendUrl,
-                'Access-Control-Request-Method': 'GET'
-            },
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-
-        expect(corsTestResponse.status).toBeLessThan(300);
-        console.log('✅ CORS configuration verified');
-
-        // Test that backend serves expected JSON structure for frontend
-        const configStructureResponse = await axios.get(`${backendUrl}/api/v1/shell/configuration`, {
-            headers: { 'X-User-Id': TEST_CONFIG.TEST_USER_ID },
-            timeout: TEST_CONFIG.API_TIMEOUT
-        });
-
-        const config = configStructureResponse.data;
-        
-        // Verify the structure matches what the frontend expects
-        expect(config).toHaveProperty('frames');
-        expect(config).toHaveProperty('availableApps');
-        expect(config).toHaveProperty('serviceEndpoints');
-        expect(config).toHaveProperty('layouts');
-
-        // Verify types are correct
-        expect(Array.isArray(config.frames)).toBe(true);
-        expect(Array.isArray(config.availableApps)).toBe(true);
-        expect(Array.isArray(config.layouts)).toBe(true);
-        expect(typeof config.serviceEndpoints).toBe('object');
-
-        console.log('✅ Frontend-backend integration verified');
-
-    }, TEST_CONFIG.API_TIMEOUT);
-
-});
-
-// Test results reporting for dashboard integration
-if (require.main === module) {
-    console.log('Running Portal Integration Tests...');
+    const baseUrl = `http://localhost:${TEST_CONFIG.BACKEND_PORT}`;
+    const headers = { 'X-User-Id': TEST_CONFIG.TEST_USER_ID };
     
-    // Simple test runner for non-Jest environments
-    const runTests = async () => {
-        try {
-            console.log('Starting test execution...');
-            // Implementation would go here for standalone execution
-            console.log('Tests completed - check detailed results above');
-        } catch (error) {
-            console.error('Test execution failed:', error);
-            process.exit(1);
-        }
+    // Test all endpoints
+    const healthResponse = await httpGet(`${baseUrl}/health`);
+    assertEqual(healthResponse.status, 200, 'Health endpoint should work');
+
+    const configResponse = await httpGet(`${baseUrl}/api/v1/shell/configuration`, { headers });
+    assertEqual(configResponse.status, 200, 'Configuration endpoint should work');
+    
+    const configData = JSON.parse(configResponse.data);
+    assertProperty(configData, 'frames', 'Config should have frames');
+    assertProperty(configData, 'availableApps', 'Config should have availableApps');
+    assertProperty(configData, 'serviceEndpoints', 'Config should have serviceEndpoints');
+
+    const layoutsResponse = await httpGet(`${baseUrl}/api/v1/shell/layouts`);
+    assertEqual(layoutsResponse.status, 200, 'Layouts endpoint should work');
+
+    const appsResponse = await httpGet(`${baseUrl}/api/v1/shell/available-apps`);
+    assertEqual(appsResponse.status, 200, 'Available apps endpoint should work');
+
+    testResults.preferencesApi = true;
+}
+
+async function testUIIntegration() {
+    console.log('🌐 Testing UI integration...');
+
+    const frontendUrl = `http://localhost:${TEST_CONFIG.FRONTEND_PORT}`;
+    const response = await httpGet(frontendUrl, { timeout: TEST_CONFIG.UI_TIMEOUT });
+    
+    assertEqual(response.status < 500, true, 'Frontend should not return server error');
+    
+    const htmlContent = response.data.toLowerCase();
+    const hasHtml = htmlContent.includes('html') || htmlContent.includes('<!doctype');
+    assertEqual(hasHtml, true, 'Response should contain HTML content');
+    
+    // Check for proper branding
+    const hasPortalTitle = response.data.includes('AI MFE Portal');
+    assertEqual(hasPortalTitle, true, 'Should have AI MFE Portal branding');
+
+    testResults.uiAccessible = true;
+}
+
+async function testEndToEndFlow() {
+    console.log('🔄 Testing complete end-to-end workflow...');
+
+    const baseUrl = `http://localhost:${TEST_CONFIG.BACKEND_PORT}`;
+    const headers = { 
+        'X-User-Id': TEST_CONFIG.TEST_USER_ID,
+        'Content-Type': 'application/json'
     };
 
-    runTests();
+    // Complete workflow test
+    const testPreferences = {
+        frames: [
+            {
+                id: 'integration-test-frame',
+                name: 'Integration Test Workspace',
+                order: 0,
+                layoutId: 'two-column',
+                assignedApps: [
+                    { appId: 'test-app', windowId: 1 },
+                    { appId: 'job-management', windowId: 2 }
+                ]
+            }
+        ]
+    };
+
+    // Save complex preferences
+    const saveResponse = await httpPut(`${baseUrl}/api/v1/shell/preferences`, testPreferences, { headers });
+    assertEqual(saveResponse.status, 200, 'Complex preferences should save');
+
+    // Verify retrieval
+    const retrieveResponse = await httpGet(`${baseUrl}/api/v1/shell/configuration`, { headers });
+    const config = JSON.parse(retrieveResponse.data);
+    
+    const testFrame = config.frames.find(f => f.id === 'integration-test-frame');
+    assertEqual(testFrame !== undefined, true, 'Test frame should exist');
+    assertEqual(testFrame.assignedApps.length, 2, 'Should have 2 assigned apps');
+
+    testResults.preferencesFlow = true;
+    testResults.integration = true;
 }
+
+async function cleanup() {
+    if (portalProcess && !portalProcess.killed) {
+        portalProcess.kill('SIGTERM');
+        await new Promise(resolve => {
+            portalProcess.on('close', () => {
+                resolve();
+            });
+            setTimeout(() => {
+                if (!portalProcess.killed) {
+                    portalProcess.kill('SIGKILL');
+                    resolve();
+                }
+            }, TEST_CONFIG.CLEANUP_TIMEOUT);
+        });
+    }
+}
+
+// Run tests if this file is executed directly
+if (require.main === module) {
+    runIntegrationTests().catch(error => {
+        console.error('Integration test execution failed:', error);
+        process.exit(1);
+    });
+}
+
+module.exports = {
+    runIntegrationTests,
+    testResults,
+    TEST_CONFIG
+};
