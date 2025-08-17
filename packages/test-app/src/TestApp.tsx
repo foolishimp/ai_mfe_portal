@@ -3,7 +3,7 @@
  * --- ADDED LOGGING for Event Bus Debugging ---
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box, Typography, ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { eventBus as localEventBus } from 'shared'; // Import local instance
 
 // Define expected structure for props if mount passes them
@@ -21,6 +21,24 @@ declare global {
     }
 }
 // *** FIX END ***
+
+// Dark theme for test app to match portal
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: { 
+            main: '#667eea',
+        },
+        background: { 
+            default: 'transparent',
+            paper: 'rgba(255, 255, 255, 0.08)'
+        },
+        text: {
+            primary: 'rgba(255, 255, 255, 0.95)',
+            secondary: 'rgba(255, 255, 255, 0.7)'
+        }
+    }
+});
 
 const TestApp: React.FC<TestAppProps> = (props) => {
     const [messageCount, setMessageCount] = useState(0);
@@ -79,24 +97,58 @@ const TestApp: React.FC<TestAppProps> = (props) => {
     };
 
     return (
-        <Box sx={{ border: '2px dashed blue', p: 2, m: 1 }}>
-            <Typography variant="h6">Test App</Typography>
-            <Typography>Loaded successfully!</Typography>
-            <Typography>Messages Received: {messageCount}</Typography>
-            <Typography>
-                Last Message:
-                {lastMessage ? '' : ' (None yet - try clicking the button below)'}
-            </Typography>
-            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', background: '#f0f0f0', padding: '5px' }}>
-                {JSON.stringify(lastMessage, null, 2)}
-            </pre>
-            <Button variant="contained" onClick={handleSendMessage} sx={{ mt: 1 }}>
-                Send Test Message (Ping)
-            </Button>
-            <Typography variant="caption" display="block" sx={{ mt: 2, color: 'text.secondary' }}>
-                Using Event Bus from: {busSource}
-            </Typography>
-        </Box>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            <Box sx={{ 
+                border: '2px dashed #667eea', 
+                background: 'rgba(255, 255, 255, 0.05)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                p: 2, 
+                m: 1,
+                color: 'white'
+            }}>
+                <Typography variant="h6" color="primary">Test App</Typography>
+                <Typography color="text.primary">Loaded successfully!</Typography>
+                <Typography color="text.primary">Messages Received: {messageCount}</Typography>
+                <Typography color="text.primary">
+                    Last Message:
+                    {lastMessage ? '' : ' (None yet - try clicking the button below)'}
+                </Typography>
+                <pre style={{ 
+                    whiteSpace: 'pre-wrap', 
+                    wordBreak: 'break-all', 
+                    background: 'rgba(0, 0, 0, 0.4)', 
+                    color: '#e0e0e0',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(102, 126, 234, 0.3)',
+                    fontSize: '0.85em',
+                    marginTop: '8px',
+                    marginBottom: '8px'
+                }}>
+                    {JSON.stringify(lastMessage, null, 2)}
+                </pre>
+                <Button 
+                    variant="contained" 
+                    onClick={handleSendMessage} 
+                    sx={{ 
+                        mt: 1,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                            background: 'linear-gradient(135deg, #5a67d8 0%, #6b399f 100%)',
+                            transform: 'translateY(-1px)',
+                            boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)'
+                        }
+                    }}
+                >
+                    Send Test Message (Ping)
+                </Button>
+                <Typography variant="caption" display="block" sx={{ mt: 2, color: 'text.secondary' }}>
+                    Using Event Bus from: {busSource}
+                </Typography>
+            </Box>
+        </ThemeProvider>
     );
 };
 
