@@ -1,14 +1,10 @@
 /**
- * /packages/shared/src/index.ts
- * Main entry point for shared package
- * Exports all shared types, utilities, components and services
+ * AI MFE Portal Shared Package
+ * Main entry point for shared utilities, types, and services
  */
 export * from './types/events';
-export type { LayoutInfoResponse, LayoutDefinition, LayoutWindow, Frame, AppAssignment, ShellConfigurationResponse, ShellPreferencesRequest, AppDefinition, ServiceEndpoints, Preferences, MFEType } from './types/shell';
-export type * from './types/shell';
-export type * from './types/workorder';
+export type { LayoutInfoResponse, LayoutDefinition, LayoutWindow, Frame, AppAssignment, ShellConfigurationResponse, ShellPreferencesRequest, AppDefinition, ServiceEndpoints, Preferences } from './types/shell';
 export type * from './types/config';
-export * from './types/job';
 export type * from './types/iframe';
 export * from './utils/bootstrapHelper';
 export * from './config/configTypes';

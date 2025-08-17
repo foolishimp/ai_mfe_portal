@@ -1,22 +1,33 @@
 # Active Tasks
 
 ## Current Sprint
-*Last Updated: 2025-01-16*
+*Last Updated: [DATE]*
 
 ---
 
 ## Task Queue
 
-*No active tasks currently. Ready for new development work.*
+### Example: Task Template
+- **ID**: 1
+- **Priority**: High/Medium/Low
+- **Status**: Not Started / In Progress / Blocked
+- **Estimated Time**: X hours
+- **Dependencies**: None
+- **Description**: Clear description of what needs to be done
+- **Acceptance Criteria**:
+  - [ ] Tests written and passing
+  - [ ] Code implemented
+  - [ ] Documentation updated
+  - [ ] Code reviewed
 
 ---
+
+## Completed Tasks
+*Move to finished/YYYYMMDD_HHMM_task_name.md when complete*
 
 ## Notes
 - Follow TDD: Write tests first (RED → GREEN → REFACTOR)
 - Update status as you work
 - Document in finished/ when complete
 - Commit after each task completion
-- Use feature flags for new features: `task-N-feature-name`
-- Maintain >80% test coverage
-- All tests must be categorized for the Test Dashboard
 EOF < /dev/null

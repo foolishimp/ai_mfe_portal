@@ -1,32 +1,23 @@
 /**
- * Configuration Type Registry
- *
- * This file defines all supported configuration types and their metadata.
- * New configuration types can be added here without code changes.
+ * Configuration types for AI MFE Portal
+ * Extensible configuration system for generic portal applications
  */
-export interface ConfigTypeMetadata {
-    type: string;
+export interface ConfigType {
     name: string;
     description: string;
     supportsVersioning: boolean;
+    defaultContent?: Record<string, any>;
     apiEndpoints: {
         list: string;
         get: (id: string) => string;
         create: string;
         update: (id: string) => string;
         delete: (id: string) => string;
+        history: (id: string) => string;
         archive: (id: string) => string;
         unarchive: (id: string) => string;
         clone: (id: string) => string;
-        history: (id: string) => string;
-        render?: (id: string) => string;
-        test?: (id: string) => string;
     };
-    defaultContent?: Record<string, any>;
-    requiredForJob: boolean;
-    icon?: string;
 }
-declare const configTypes: Record<string, ConfigTypeMetadata>;
-declare const backwardCompatibilityAliases: Record<string, string>;
-export { configTypes, backwardCompatibilityAliases };
+export declare const configTypes: Record<string, ConfigType>;
 export default configTypes;
