@@ -9,7 +9,22 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 const app = express();
-const PORT = process.env.PORT || 8085;
+// Load project-specific configuration
+let projectConfig = {};
+try {
+    const configPath = path.join(__dirname, 'project-config.json');
+    const configData = require('fs').readFileSync(configPath, 'utf-8');
+    projectConfig = JSON.parse(configData);
+} catch (error) {
+    // Use defaults if no config file
+    projectConfig = {
+        port: 8085,
+        projectName: path.basename(process.cwd()),
+        projectPath: process.cwd()
+    };
+}
+
+const PORT = process.env.PORT || projectConfig.port || 8085;
 
 // Middleware
 app.use(cors());
@@ -228,6 +243,15 @@ app.post('/api/refresh', async (req, res) => {
     }
 });
 
+// API: Get project configuration
+app.get('/api/project-config', (req, res) => {
+    res.json({
+        projectName: projectConfig.projectName,
+        projectPath: projectConfig.projectPath,
+        port: PORT
+    });
+});
+
 // API: Check Claude init status
 app.get('/api/claude-status', async (req, res) => {
     try {
@@ -249,14 +273,21 @@ app.get('/api/claude-status', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+    const projectDisplayPath = projectConfig.projectPath.length > 30 
+        ? '...' + projectConfig.projectPath.slice(-27) 
+        : projectConfig.projectPath;
+    
     console.log(`
 ╔════════════════════════════════════════╗
 ║         Test Dashboard Server          ║
+║    Project Test Suite Management       ║
 ╠════════════════════════════════════════╣
-║  Server running at:                    ║
-║  http://localhost:${PORT}                 ║
+║  Project: ${projectConfig.projectName.padEnd(26)} ║
+║  Path: ${projectDisplayPath.padEnd(29)} ║
+║  Server: http://localhost:${PORT.toString().padEnd(13)} ║
 ║                                        ║
 ║  API Endpoints:                        ║
+║  GET  /api/project-config              ║
 ║  GET  /api/test-registry               ║
 ║  GET  /api/test-content                ║
 ║  POST /api/run-test                    ║

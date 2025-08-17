@@ -33,8 +33,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
                     <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'baseline' }}>
-                        <Typography variant="h5" noWrap component="div" sx={{ mr: 2 }}>Visual Prompt Studio</Typography>
-                        <Typography variant="subtitle1" noWrap component="div" sx={{ opacity: 0.8 }}>C4H Editor</Typography>
+                        <Typography variant="h5" noWrap component="div" sx={{ mr: 2 }}>AI MFE Portal</Typography>
+                        <Typography variant="subtitle1" noWrap component="div" sx={{ opacity: 0.8 }}>Microfrontend Framework</Typography>
                     </Box>
                     <IconButton color="inherit" aria-label="open preferences" onClick={onOpenPreferences} edge="end">
                         <SettingsIcon />

@@ -1,5 +1,5 @@
 /**
- * Global type declarations for the C4H Editor microfrontend architecture
+ * Global type declarations for the AI MFE Portal microfrontend architecture
  */
 
 // Global window extensions for event bus and shared modules

@@ -748,7 +748,7 @@
         <div class="header-top">
             <div>
                 <h1>📊 Test Dashboard</h1>
-                <div class="subtitle">Project Test Suite Management</div>
+                <div class="subtitle" id="project-subtitle">Project Test Suite Management</div>
             </div>
             <div class="stats">
                 <div class="stat">
@@ -1372,8 +1372,27 @@
         // Initial log message
         log('Dashboard initialized. Ready to run tests.', 'info');
 
+        // Load project configuration and update header
+        async function loadProjectConfig() {
+            try {
+                const response = await fetch('/api/project-config');
+                if (response.ok) {
+                    const config = await response.json();
+                    const subtitle = document.getElementById('project-subtitle');
+                    // Truncate path if too long
+                    const displayPath = config.projectPath.length > 50 
+                        ? '...' + config.projectPath.slice(-47) 
+                        : config.projectPath;
+                    subtitle.textContent = `Project Test Suite Management (${displayPath} : ${config.port})`;
+                }
+            } catch (error) {
+                console.error('Failed to load project config:', error);
+            }
+        }
+
         // Initialize directories and load tests on page load
         loadSelectedDirectories();
+        loadProjectConfig();
         loadTests();
     </script>
 </body>

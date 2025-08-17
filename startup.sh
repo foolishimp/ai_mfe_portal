@@ -1,6 +1,6 @@
 #!/bin/bash
 # File: startup.sh
-# Description: Builds and starts all C4H Editor microfrontends with Module Federation
+# Description: Builds and starts all AI MFE Portal microfrontends with Module Federation
 
 # Store the root directory
 ROOT_DIR=$(pwd)
@@ -160,7 +160,7 @@ update_remotes_config() {
 trap cleanup SIGINT SIGTERM
 
 # Main execution starts here
-print_header "STARTING C4H EDITOR WITH MICROFRONTENDS"
+print_header "STARTING AI MFE PORTAL WITH MICROFRONTENDS"
 
 # Check all ports first
 print_header "CHECKING PORTS"

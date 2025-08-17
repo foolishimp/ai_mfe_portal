@@ -62,10 +62,10 @@ const Navigation: React.FC<NavigationProps> = ({ drawerWidth }) => {
         <Toolbar>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
             <Typography variant="h5" noWrap component="div">
-              Visual Prompt Studio
+              AI MFE Portal
             </Typography>
             <Typography variant="subtitle1" noWrap component="div">
-              C4H Editor
+              Microfrontend Framework
             </Typography>
           </Box>
         </Toolbar>
