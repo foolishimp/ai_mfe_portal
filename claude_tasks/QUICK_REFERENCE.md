@@ -79,7 +79,7 @@ cat claude_tasks/DEVELOPMENT_PROCESS.md
 ## 📊 Test Dashboard Integration
 All tests must be categorized and runnable through:
 ```bash
-open http://localhost:3000/test-dashboard.html
+npm run test:dashboard  # Starts external test dashboard tool
 ```
 
 Test categories:
@@ -110,7 +110,7 @@ cat claude_tasks/active/ACTIVE_TASKS.md
 ls claude_tasks/finished/
 
 # Test Dashboard
-open http://localhost:3000/test-dashboard.html
+npm run test:dashboard  # Starts external test dashboard tool
 
 # Feature Flags (browser console)
 featureFlags.isEnabled('task-N-name')
@@ -331,7 +331,7 @@ npm test -- --watch feature.test.ts
 npm test -- --coverage
 
 # 5. Run through dashboard
-open http://localhost:3000/test-dashboard.html
+npm run test:dashboard  # Starts external test dashboard tool
 ```
 
 ## 📝 Pair Programming Reminders

@@ -74,7 +74,7 @@ touch src/modules/feature/feature.test.ts
 
 ### 3.2 Write Test Cases with Dashboard Metadata
 
-**IMPORTANT**: All tests MUST be categorized and made available through the Test Dashboard at http://localhost:3000/test-dashboard.html
+**IMPORTANT**: All tests MUST be categorized and made available through the Test Dashboard via `npm run test:dashboard`
 
 Categories:
 - **interface**: API contracts and module interfaces
@@ -126,7 +126,7 @@ npm test feature.test.ts
 # Should see RED - tests failing because code doesn't exist
 
 # Also verify test appears in dashboard
-open http://localhost:3000/test-dashboard.html
+npm run test:dashboard
 # Should see your new test in the appropriate category
 ```
 
@@ -451,7 +451,7 @@ npm test -- --no-cache         # Clear test cache
 npm test -- --verbose          # Detailed test output
 
 # Dashboard Testing (REQUIRED)
-open http://localhost:3000/test-dashboard.html  # Visual test runner
+npm run test:dashboard  # Visual test runner (external tool)
 # ALL tests must be runnable through dashboard
 # Tests without dashboard metadata will not be discoverable
 npm run test:interfaces         # Run interface tests

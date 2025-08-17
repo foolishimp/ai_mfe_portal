@@ -22,7 +22,7 @@
     "install:all": "npm install && npm run build:shared",
     "clean": "rimraf packages/*/dist packages/*/node_modules node_modules",
     "dev": "npm run start",
-    "test:dashboard": "PROJECT_DIRS=\".\" node test-dashboard-module/server.js",
+    "test:dashboard": "PROJECT_DIRS=\".\" node test_dd_dashboard/server.js",
     "test": "jest",
     "test:e2e": "jest tests/e2e",
     "test:integration": "jest --testPathPattern=integration",

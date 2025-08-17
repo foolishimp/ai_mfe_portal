@@ -113,11 +113,9 @@ shell_service/data/*.db
 *.backup
 CLAUDE.md.backup
 
-# Test Dashboard Module (from test_dd_dashboard)
-test-dashboard-module/node_modules/
-test-dashboard-module/package-lock.json
-test-dashboard-module/test-registry.json
-test-dashboard-module/*.log
+# Test Dashboard - External Tool (like node_modules)
+test_dd_dashboard/
+test-dashboard-module/
 test-registry.json
 
 # Temporary files
